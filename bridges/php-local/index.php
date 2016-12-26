@@ -31,16 +31,7 @@ function sbasename($filename) {
 }
 
 function getFilesize($file) {
-  $size = filesize($file);
-  if ($size < 0) {
-    if ((strtoupper(substr(PHP_OS, 0, 3)) == 'WIN')) {
-      exec('for %I in ("' . $file . '") do @echo %~zI', $output);
-      $size = $output[0];
-    } else {
-      $size = trim(`stat -c%s $file`);
-    }
-  }
-  return $size;
+  return sprintf('%u', filesize($file));
 }
 
 function debugLog($msg) {
