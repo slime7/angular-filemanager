@@ -1,6 +1,7 @@
 /nbproject/private/
 nbproject/
 node_modules/
+target/
 .idea/
 
 /fackpath/*
