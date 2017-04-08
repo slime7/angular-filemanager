@@ -1,46 +1,43 @@
 <?php
 namespace AngularFilemanager\LocalBridge;
-
 /**
  * File Manager API Class
  *
  * Made for PHP Local filesystem bridge for angular-filemanager to handle file manipulations
- * @author       Jakub Ďuraš <jakub@duras.me>
+ * @author Jakub Ďuraš <jakub@duras.me>
  */
 class FileManagerApi
 {
   private $basePath = null;
-
   private $translate;
-
-  public function __construct($basePath = null, $lang = 'en', $muteErrors = true) {
+  public function __construct($basePath = null, $lang = 'en', $muteErrors = true)
+  {
     if ($muteErrors) {
       ini_set('display_errors', 0);
     }
-
     $this->basePath = $basePath ?: dirname(__DIR__);
     $this->translate = new Translate($lang);
   }
-
-  public function postHandler($query, $request, $files) {
+  public function postHandler($query, $request, $files)
+  {
     $t = $this->translate;
 
     // Probably file upload
-    if (!isset($request['action']) && (isset($_SERVER["CONTENT_TYPE"]) && strpos($_SERVER["CONTENT_TYPE"], 'multipart/form-data') !== false)) {
+    if (!isset($request['action'])
+      && (isset($_SERVER["CONTENT_TYPE"])
+        && strpos($_SERVER["CONTENT_TYPE"], 'multipart/form-data') !== false)
+    ) {
       $uploaded = $this->uploadAction($request['destination'], $files);
       if ($uploaded === true) {
         $response = $this->simpleSuccessResponse();
       } else {
         $response = $this->simpleErrorResponse($t->upload_failed);
       }
-
       return $response;
     }
-
     switch ($request['action']) {
       case 'list':
         $list = $this->listAction($request['path']);
-
         if (!is_array($list)) {
           $response = $this->simpleErrorResponse($t->listing_filed);
         } else {
@@ -50,7 +47,6 @@ class FileManagerApi
           ]);
         }
         break;
-
       case 'rename':
         $renamed = $this->renameAction($request['item'], $request['newItemPath']);
         if ($renamed === true) {
@@ -61,7 +57,6 @@ class FileManagerApi
           $response = $this->simpleErrorResponse($t->renaming_failed);
         }
         break;
-
       case 'move':
         $moved = $this->moveAction($request['items'], $request['newPath']);
         if ($moved === true) {
@@ -70,7 +65,6 @@ class FileManagerApi
           $response = $this->simpleErrorResponse($t->moving_failed);
         }
         break;
-
       case 'copy':
         $copied = $this->copyAction($request['items'], $request['newPath']);
         if ($copied === true) {
@@ -79,7 +73,6 @@ class FileManagerApi
           $response = $this->simpleErrorResponse($t->copying_failed);
         }
         break;
-
       case 'remove':
         $removed = $this->removeAction($request['items']);
         if ($removed === true) {
@@ -90,7 +83,6 @@ class FileManagerApi
           $response = $this->simpleErrorResponse($t->removing_failed);
         }
         break;
-
       case 'edit':
         $edited = $this->editAction($request['item'], $request['content']);
         if ($edited !== false) {
@@ -99,7 +91,6 @@ class FileManagerApi
           $response = $this->simpleErrorResponse($t->saving_failed);
         }
         break;
-
       case 'getContent':
         $content = $this->getContentAction($request['item']);
         if ($content !== false) {
@@ -111,7 +102,6 @@ class FileManagerApi
           $response = $this->simpleErrorResponse($t->file_not_found);
         }
         break;
-
       case 'createFolder':
         $created = $this->createFolderAction($request['newPath']);
         if ($created === true) {
@@ -122,7 +112,6 @@ class FileManagerApi
           $response = $this->simpleErrorResponse($t->folder_creation_failed);
         }
         break;
-
       case 'changePermissions':
         $changed = $this->changePermissionsAction($request['items'], $request['perms'], $request['recursive']);
         if ($changed === true) {
@@ -133,16 +122,18 @@ class FileManagerApi
           $response = $this->simpleErrorResponse($t->permissions_change_failed);
         }
         break;
-
       case 'compress':
-        $compressed = $this->compressAction($request['items'], $request['destination'], $request['compressedFilename']);
+        $compressed = $this->compressAction(
+          $request['items'],
+          $request['destination'],
+          $request['compressedFilename']
+        );
         if ($compressed === true) {
           $response = $this->simpleSuccessResponse();
         } else {
           $response = $this->simpleErrorResponse($t->compression_failed);
         }
         break;
-
       case 'extract':
         $extracted = $this->extractAction($request['destination'], $request['item'], $request['folderName']);
         if ($extracted === true) {
@@ -158,11 +149,10 @@ class FileManagerApi
         $response = $this->simpleErrorResponse($t->function_not_implemented);
         break;
     }
-
     return $response;
   }
-
-  public function getHandler($queries) {
+  public function getHandler($queries)
+  {
     $t = $this->translate;
 
     switch ($queries['action']) {
@@ -180,37 +170,32 @@ class FileManagerApi
         $response = $this->simpleErrorResponse($t->function_not_implemented);
         break;
     }
-
     return $response;
   }
-
-  private function downloadAction($path) {
+  private function downloadAction($path)
+  {
     $file_name = sbasename($path);
-    $path = $this->basePath . iconv('UTF-8', SYSTEM_coding, $path);
-
+    $path = $this->basePath . $path;
     if (!file_exists($path)) {
       return false;
     }
-
     $finfo = finfo_open(FILEINFO_MIME_TYPE);
     $mime_type = finfo_file($finfo, $path);
     finfo_close($finfo);
-
-    if (ob_get_level()) ob_end_clean();
-
+    if (ob_get_level()) {
+      ob_end_clean();
+    }
     header("Content-Disposition: attachment; filename=\"$file_name\"");
     header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
     header("Content-Type: $mime_type");
     header('Pragma: public');
     header('Content-Length: ' . getFilesize($path));
     readfile($path);
-
     return true;
   }
-
-  private function uploadAction($path, $files) {
-    $path = $this->basePath . iconv('UTF-8', SYSTEM_coding, $path);
-
+  private function uploadAction($path, $files)
+  {
+    $path = $this->basePath . $path;
     foreach ($_FILES as $file) {
       $uploaded = move_uploaded_file(
         $file['tmp_name'],
@@ -220,17 +205,15 @@ class FileManagerApi
         return false;
       }
     }
-
     return true;
   }
-
-  private function listAction($path) {
+  private function listAction($path)
+  {
     $files = [];
     $filesDir = [];
 
     $path = iconv('UTF-8', SYSTEM_coding, $path);
     $current_path = $this->basePath . rtrim($path, '/');
-
     if (!$handle = @opendir($current_path)) {
       return 'cannotopen';
     } else {
@@ -241,11 +224,7 @@ class FileManagerApi
       }
       closedir($handle);
       unset($file, $handle);
-
-      // By default
-      // Sorting files by name ('default' or 'NAME_DESC' cases from $this->config['options']['fileSorting']
       natcasesort($filesDir);
-
       foreach ($filesDir as $file) {
         $files[] = [
           'name' => iconv(mb_detect_encoding($file, array('ASCII', 'UTF-8', 'GB2312', 'GBK', 'BIG5')), 'UTF-8', $file),
@@ -257,24 +236,21 @@ class FileManagerApi
       }
       unset($file);
     }
-
     $files = $this->sortFiles($files);
-
     return $files;
   }
-
-  private function renameAction($oldPath, $newPath) {
+  private function renameAction($oldPath, $newPath)
+  {
     $oldPath = $this->basePath . iconv('UTF-8', SYSTEM_coding, $oldPath);
     $newPath = $this->basePath . iconv('UTF-8', SYSTEM_coding, $newPath);
 
     if (!file_exists($oldPath)) {
       return 'notfound';
     }
-
     return rename($oldPath, $newPath);
   }
-
-  private function moveAction($oldPaths, $newPath) {
+  private function moveAction($oldPaths, $newPath)
+  {
     $newPath = $this->basePath . iconv('UTF-8', SYSTEM_coding, $newPath) . '/';
 
     foreach ($oldPaths as $oldPath) {
@@ -282,25 +258,21 @@ class FileManagerApi
       if (!file_exists($this->basePath . $oldPath)) {
         return false;
       }
-
       $renamed = rename($this->basePath . $oldPath, $newPath . sbasename($oldPath));
       if ($renamed === false) {
         return false;
       }
     }
-
     return true;
   }
-
-  private function copyAction($oldPaths, $newPath) {
+  private function copyAction($oldPaths, $newPath)
+  {
     $newPath = $this->basePath . iconv('UTF-8', SYSTEM_coding, $newPath) . '/';
-
     foreach ($oldPaths as $oldPath) {
       $oldPath = iconv('UTF-8', SYSTEM_coding, $oldPath);
       if (!file_exists($this->basePath . $oldPath)) {
         return false;
       }
-
       $copied = copy(
         $this->basePath . $oldPath,
         $newPath . sbasename($oldPath)
@@ -309,17 +281,14 @@ class FileManagerApi
         return false;
       }
     }
-
     return true;
   }
-
-  private function removeAction($paths) {
+  private function removeAction($paths)
+  {
     foreach ($paths as $path) {
       $path = $this->basePath . iconv('UTF-8', SYSTEM_coding, $path);
-
       if (is_dir($path)) {
         $dirEmpty = (new \FilesystemIterator($path))->valid();
-
         if ($dirEmpty) {
           return 'notempty';
         } else {
@@ -328,44 +297,38 @@ class FileManagerApi
       } else {
         $removed = unlink($path);
       }
-
       if ($removed === false) {
         return false;
       }
     }
-
     return true;
   }
-
-  private function editAction($path, $content) {
+  private function editAction($path, $content)
+  {
     $path = $this->basePath . iconv('UTF-8', SYSTEM_coding, $path);
     return file_put_contents($path, $content);
   }
-
-  private function getContentAction($path) {
+  private function getContentAction($path)
+  {
     $path = $this->basePath . iconv('UTF-8', SYSTEM_coding, $path);
 
     if (!file_exists($path)) {
       return false;
     }
-
     $content = file_get_contents($path);
     $content = iconv(mb_detect_encoding(urldecode($content), array('ASCII', 'UTF-8', 'GB2312', 'GBK', 'BIG5')), 'UTF-8', urldecode($content));
-
     return $content;
   }
-
-  private function createFolderAction($path) {
+  private function createFolderAction($path)
+  {
     $path = $this->basePath . iconv('UTF-8', SYSTEM_coding, $path);
-
     if (file_exists($path) && is_dir($path)) {
       return 'exists';
     }
-
     return mkdir($path);
   }
-
-  private function changePermissionsAction($paths, $permissions, $recursive) {
+  private function changePermissionsAction($paths, $permissions, $recursive)
+  {
     foreach ($paths as $path) {
       $path = iconv('UTF-8', SYSTEM_coding, $path);
       if (!file_exists($this->basePath . $path)) return 'missing';
@@ -375,7 +338,6 @@ class FileManagerApi
           new RecursiveDirectoryIterator($path),
           RecursiveIteratorIterator::SELF_FIRST
         );
-
         foreach ($iterator as $item) {
           $item = iconv('UTF-8', SYSTEM_coding, $item);
           $changed = chmod($this->basePath . $item, octdec($permissions));
@@ -385,32 +347,26 @@ class FileManagerApi
           }
         }
       }
-
       return chmod($this->basePath . $path, octdec($permissions));
     }
   }
-
-  private function compressAction($paths, $destination, $archiveName) {
-    return 'pass';
+  private function compressAction($paths, $destination, $archiveName)
+  {
     $destination = iconv('UTF-8', SYSTEM_coding, $destination);
     $archiveName = iconv('UTF-8', SYSTEM_coding, $archiveName);
     $archivePath = $this->basePath . $destination . $archiveName;
-
     $zip = new ZipArchive();
     if ($zip->open($archivePath, ZipArchive::CREATE) !== true) {
       return false;
     }
-
     foreach ($paths as $path) {
       $path = iconv('UTF-8', SYSTEM_coding, $path);
       $zip->addFile($this->basePath . $path, basename($path));
     }
-
     return $zip->close();
   }
-
-  private function extractAction($destination, $archivePath, $folderName) {
-    return 'pass';
+  private function extractAction($destination, $archivePath, $folderName)
+  {
     $archivePath = $this->basePath . iconv('UTF-8', SYSTEM_coding, $archivePath);
     $folderPath = $this->basePath . rtrim(iconv('UTF-8', SYSTEM_coding, $destination), '/') . '/' . $folderName;
 
@@ -418,24 +374,22 @@ class FileManagerApi
     if ($zip->open($archivePath) === false) {
       return 'unsupported';
     }
-
     mkdir($folderPath);
     $zip->extractTo($folderPath);
     return $zip->close();
   }
-
-  private function simpleSuccessResponse() {
+  private function simpleSuccessResponse()
+  {
     $response = new Response();
     $response->setData([
       'result' => [
         'success' => true
       ]
     ]);
-
     return $response;
   }
-
-  private function simpleErrorResponse($message) {
+  private function simpleErrorResponse($message)
+  {
     $response = new Response();
     $response
       ->setStatus(500, 'Internal Server Error')
@@ -445,11 +399,10 @@ class FileManagerApi
           'error' => $message
         ]
       ]);
-
     return $response;
   }
-
-  private function parsePerms($perms) {
+  private function parsePerms($perms)
+  {
     if (($perms & 0xC000) == 0xC000) {
       // Socket
       $info = 's';
@@ -475,31 +428,26 @@ class FileManagerApi
       // Unknown
       $info = 'u';
     }
-
     // Owner
     $info .= (($perms & 0x0100) ? 'r' : '-');
     $info .= (($perms & 0x0080) ? 'w' : '-');
     $info .= (($perms & 0x0040) ?
-      (($perms & 0x0800) ? 's' : 'x') :
+      (($perms & 0x0800) ? 's' : 'x' ) :
       (($perms & 0x0800) ? 'S' : '-'));
-
     // Group
     $info .= (($perms & 0x0020) ? 'r' : '-');
     $info .= (($perms & 0x0010) ? 'w' : '-');
     $info .= (($perms & 0x0008) ?
-      (($perms & 0x0400) ? 's' : 'x') :
+      (($perms & 0x0400) ? 's' : 'x' ) :
       (($perms & 0x0400) ? 'S' : '-'));
-
     // World
     $info .= (($perms & 0x0004) ? 'r' : '-');
     $info .= (($perms & 0x0002) ? 'w' : '-');
     $info .= (($perms & 0x0001) ?
-      (($perms & 0x0200) ? 't' : 'x') :
+      (($perms & 0x0200) ? 't' : 'x' ) :
       (($perms & 0x0200) ? 'T' : '-'));
-
     return $info;
   }
-
   private function sortFiles($array) {
     $a = [];
     $b = [];
@@ -515,6 +463,5 @@ class FileManagerApi
     $array = array_merge($a, $b);
 
     return $array;
-
   }
 }
