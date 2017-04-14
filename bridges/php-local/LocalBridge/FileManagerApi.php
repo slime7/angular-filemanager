@@ -174,6 +174,7 @@ class FileManagerApi
   }
   private function downloadAction($path)
   {
+    $path = iconv('UTF-8', SYSTEM_coding, $path);
     $file_name = sbasename($path);
     $path = $this->basePath . $path;
     if (!file_exists($path)) {
@@ -195,6 +196,7 @@ class FileManagerApi
   }
   private function uploadAction($path, $files)
   {
+    $path = iconv('UTF-8', SYSTEM_coding, $path);
     $path = $this->basePath . $path;
     foreach ($_FILES as $file) {
       $uploaded = move_uploaded_file(
