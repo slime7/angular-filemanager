@@ -41,29 +41,30 @@
     <link href="dist/angular-filemanager.min.css" rel="stylesheet">
     <script src="dist/angular-filemanager.min.js"></script>
   <!-- /Comment if you need to use raw source code -->
-  
+
   <script type="text/javascript">
     //example to override angular-filemanager default config
     angular.module('FileManagerApp').config(['fileManagerConfigProvider', function (config) {
       var defaults = config.$get();
+	    var bridge = 'bridges/php-local/index.php';
       config.set({
         appName: 'angular-filemanager',
         defaultLang: 'zh',
 
-        listUrl: 'bridges/php-local/index.php',
-        uploadUrl: 'bridges/php-local/index.php',
-        renameUrl: 'bridges/php-local/index.php',
-        copyUrl: 'bridges/php-local/index.php',
-        moveUrl: 'bridges/php-local/index.php',
-        removeUrl: 'bridges/php-local/index.php',
-        editUrl: 'bridges/php-local/index.php',
-        getContentUrl: 'bridges/php-local/index.php',
-        createFolderUrl: 'bridges/php-local/index.php',
-        downloadFileUrl: 'bridges/php-local/index.php',
-        downloadMultipleUrl: 'bridges/php-local/index.php',
-        compressUrl: 'bridges/php-local/index.php',
-        extractUrl: 'bridges/php-local/index.php',
-        permissionsUrl: 'bridges/php-local/index.php',
+        listUrl: bridge,
+        uploadUrl: bridge,
+        renameUrl: bridge,
+        copyUrl: bridge,
+        moveUrl: bridge,
+        removeUrl: bridge,
+        editUrl: bridge,
+        getContentUrl: bridge,
+        createFolderUrl: bridge,
+        downloadFileUrl: bridge,
+        downloadMultipleUrl: bridge,
+        compressUrl: bridge,
+        extractUrl: bridge,
+        permissionsUrl: bridge,
         pickCallback: function(item) {
           var msg = 'Picked %s "%s" for external use'
             .replace('%s', item.type)

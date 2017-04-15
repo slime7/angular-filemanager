@@ -166,7 +166,7 @@ class Rest
                 $data = json_decode($input, true);
             } else {
                 $stream = [];
-                new stream($stream);
+                new \stream($stream);
 
                 $data = $stream['post'];
                 $files = $stream['file'];
