@@ -103,7 +103,7 @@ class Rest
         if (isset($_GET)) {
             $queries = $_GET;
         }
-        
+
         if (isset($this->callbacks['before'])) {
             $this->callbacks['before']($queries, $body['data'], $body['files']);
         }
@@ -190,7 +190,7 @@ class Rest
 
         if (isset($headers['Authorization'])) {
             $token = str_replace('Token ', '', $headers['Authorization']);
-            
+
             $authenticated = token::verify($token);
         }
 
